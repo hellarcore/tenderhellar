@@ -1,0 +1,61 @@
+---
+name: BLS
+description: Build and install BLS library. Assumes the caller did actions/setup-go and actions-checkout.
+inputs:
+  arch:
+    description: "Target architecture, one of: amd64 arm"
+    default: amd64
+    required: false
+outputs:
+  bls_cache_key:
+    description: Key used by BLS cache
+    value: ${{ runner.os }}-${{ inputs.arch }}-bls-${{ steps.bls-revision.outputs.hash }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: "1.21"
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Get BLS library revision
+      id: bls-revision
+      run: |
+        echo "::set-output name=hash::$(git --git-dir=third_party/bls-signatures/src/.git rev-parse HEAD)"
+      shell: bash
+    - uses: actions/cache@v2
+      id: bls-cache
+      with:
+        path: ~/bls-cache
+        key: ${{ runner.os }}-${{ inputs.arch }}-bls-${{ steps.bls-revision.outputs.hash }}
+    - name: install bls deps
+      run: sudo apt-get update -qq && sudo apt-get install -qq --yes libgmp-dev
+      shell: bash
+    - name: Build BLS library
+      run: make build-bls
+      if: steps.bls-cache.outputs.cache-hit != 'true'
+      shell: bash
+    - name: Save BLS library
+      run: |
+        mkdir -p ~/bls-cache/include/bls-hellar
+        mkdir -p ~/bls-cache/lib
+        cp -r ./third_party/bls-signatures/build/depends/mimalloc/libmimalloc-secure.a ~/bls-cache/lib
+        cp -r ./third_party/bls-signatures/build/depends/relic/lib/librelic_s.a ~/bls-cache/lib
+        cp -r ./third_party/bls-signatures/build/src/libhellarbls.a ~/bls-cache/lib
+        cp -rv ./third_party/bls-signatures/build/depends/relic/include/* ~/bls-cache/include
+        cp -rv ./third_party/bls-signatures/src/depends/mimalloc/include/* ~/bls-cache/include
+        cp -rv ./third_party/bls-signatures/src/depends/relic/include/* ~/bls-cache/include
+        cp -rv ./third_party/bls-signatures/src/include/* ~/bls-cache/include
+      if: steps.bls-cache.outputs.cache-hit != 'true'
+      shell: bash
+    - uses: actions/cache@v2.1.2
+      with:
+        path: ~/bls-cache
+        key: ${{ runner.os }}-${{ inputs.arch }}-bls-${{ steps.bls-revision.outputs.hash }}
+      if: steps.bls-cache.outputs.cache-hit != 'true'
+    - name: Install BLS library
+      run: |
+        sudo cp -vr ~/bls-cache/include/* /usr/local/include/
+        sudo cp -vr ~/bls-cache/lib/* /usr/local/lib/
+      shell: bash

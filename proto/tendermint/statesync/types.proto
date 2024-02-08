@@ -1,0 +1,49 @@
+syntax = "proto3";
+package tendermint.statesync;
+
+option go_package = "github.com/hellarcore/tenderhellar/proto/tendermint/statesync";
+
+import "gogoproto/gogo.proto";
+import "tendermint/types/types.proto";
+import "tendermint/types/params.proto";
+
+message SnapshotsRequest {}
+
+message SnapshotsResponse {
+  uint64 height   = 1;
+  uint32 version  = 2;
+  bytes  hash     = 3;
+  bytes  metadata = 4;
+}
+
+message ChunkRequest {
+  uint64 height   = 1;
+  uint32 version  = 2;
+  bytes  chunk_id = 3;
+}
+
+message ChunkResponse {
+  uint64 height   = 1;
+  uint32 version  = 2;
+  bytes  chunk_id = 3;
+  bytes  chunk    = 4;
+  bool   missing  = 5;
+}
+
+message LightBlockRequest {
+  uint64 height = 1;
+}
+
+message LightBlockResponse {
+  tendermint.types.LightBlock light_block = 1;
+}
+
+message ParamsRequest {
+  uint64 height = 1;
+}
+
+message ParamsResponse {
+  uint64                           height           = 1;
+  tendermint.types.ConsensusParams consensus_params = 2
+      [(gogoproto.nullable) = false];
+}

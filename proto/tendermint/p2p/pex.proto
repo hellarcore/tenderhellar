@@ -1,0 +1,16 @@
+syntax = "proto3";
+package tendermint.p2p;
+
+option go_package = "github.com/hellarcore/tenderhellar/proto/tendermint/p2p";
+
+import "gogoproto/gogo.proto";
+
+message PexAddress {
+  string url = 1 [(gogoproto.customname) = "URL"];
+}
+
+message PexRequest {}
+
+message PexResponse {
+  repeated PexAddress addresses = 1 [(gogoproto.nullable) = false];
+}

@@ -1,0 +1,7 @@
+max_block_size = 10240
+max_evidence_size = 4096
+
+[node.validator01]
+[node.validator02]
+[node.validator03]
+[node.validator04]

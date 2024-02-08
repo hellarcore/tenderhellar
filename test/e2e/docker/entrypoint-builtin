@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [ ! -z "$DEBUG" ] ; then
+    if [ -z "$DEBUG_PORT" ] ; then
+        echo DEBUG_PORT must be set when DEBUG is set
+        exit 1
+    fi
+    if [ "$DEBUG" != "stop" ] ; then
+        CONTINUE="--continue"
+    fi
+
+    DLV="/go/bin/dlv --listen=:${DEBUG_PORT} --headless=true --api-version=2 --accept-multiclient exec ${CONTINUE} "
+    SEP="--"
+fi
+
+# Forcibly remove any stray UNIX sockets left behind from previous runs
+rm -rf /var/run/privval.sock /var/run/app.sock
+
+set -ex
+
+$DLV /usr/bin/app $SEP /tenderhellar/config/app.toml
